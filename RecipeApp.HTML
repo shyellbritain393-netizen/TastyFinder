@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TastyFinder - Recipe Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        header {
+            background: #ff7e5f;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .search-section {
+            padding: 2rem;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        
+        .search-box {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        #search-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #search-input:focus {
+            border-color: #ff7e5f;
+        }
+        
+        #search-btn {
+            padding: 1rem 1.5rem;
+            background: #ff7e5f;
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.3s;
+        }
+        
+        #search-btn:hover {
+            background: #f76c4d;
+        }
+        
+        .filters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.7rem 1.5rem;
+            background: white;
+            border: 2px solid #ff7e5f;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #ff7e5f;
+            color: white;
+        }
+        
+        .recipes-container {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .recipe-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .recipe-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .recipe-content {
+            padding: 1.5rem;
+        }
+        
+        .recipe-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .recipe-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: #777;
+        }
+        
+        .recipe-description {
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        
+        .view-recipe {
+            display: inline-block;
+            padding: 0.7rem 1.5rem;
+            background: #ff7e5f;
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .view-recipe:hover {
+            background: #f76c4d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #777;
+        }
+        
+        .loading i {
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ff7e5f;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: #333;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .recipes-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            #search-input, #search-btn {
+                border-radius: 8px;
+                width: 100%;
+            }
+            
+            #search-btn {
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TastyFinder</h1>
+            <p class="subtitle">Discover delicious recipes from around the world</p>
+        </header>
+        
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search for recipes (e.g., pasta, chicken, dessert)...">
+                <button id="search-btn"><i class="fas fa-search"></i> Search</button>
+            </div>
+            
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="vegetarian">Vegetarian</button>
+                <button class="filter-btn" data-filter="dessert">Dessert</button>
+                <button class="filter-btn" data-filter="breakfast">Breakfast</button>
+                <button class="filter-btn" data-filter="dinner">Dinner</button>
+            </div>
+        </section>
+        
+        <section class="recipes-container" id="recipes-container">
+            <!-- Recipes will be displayed here -->
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>Search for recipes to get started!</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>Made with ❤️ and JavaScript | Recipe data from TheMealDB API</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.getElementById('search-btn');
+            const searchInput = document.getElementById('search-input');
+            const recipesContainer = document.getElementById('recipes-container');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            // Sample recipe data (in a real app, you would fetch from an API)
+            const sampleRecipes = [
+                {
+                    id: 1,
+                    title: "Classic Spaghetti Carbonara",
+                    category: "dinner",
+                    image: "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8c3BhZ2hldHRpfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=600&q=60",
+                    time: "25 min",
+                    servings: 4,
+                    description: "A classic Italian pasta dish with a creamy egg sauce, pancetta, and Parmesan cheese.",
+                    link: "#"
+                },
+                {
+                    id: 2,
+                    title: "Avocado Toast with Poached Eggs",
+                    category: "breakfast",
+                    image: "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fGF2b2NhZG8lMjB0b2FzdHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=600&q=60",
+                    time: "15 min",
+                    servings: 2,
+                    description: "Creamy avocado on toasted bread topped with perfectly poached eggs and seasonings.",
+                    link: "#"
+                },
+                {
+                    id: 3,
+                    title: "Chocolate Lava Cake",
+                    category: "dessert",
+                    image: "https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8Y2hvY29sYXRlJTIwbGF2YSUyMGNha2V8ZW58MHx8MHx8&auto=format&fit=crop&w=600&q=60",
+                    time: "30 min",
+                    servings: 4,
+                    description: "Warm, gooey chocolate cake with a molten center. Perfect for chocolate lovers!",
+                    link: "#"
+                },
+                {
+                    id: 4,
+                    title: "Vegetable Stir Fry",
+                    category: "vegetarian",
+                    image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTJ8fHN0aXIlMjBmcnl8ZW58MHx8MHx8&auto=format&fit=crop&w=600&q=60",
+                    time: "20 min",
+                    servings: 3,
+                    description: "Colorful vegetables stir-fried in a savory sauce, served over rice or noodles.",
+                    link: "#"
+                },
+                {
+                    id: 5,
+                    title: "Grilled Salmon with Asparagus",
+                    category: "dinner",
+                    image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8c2FsbW9uJTIwZ3JpbGxlZHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=600&q=60",
+                    time: "30 min",
+                    servings: 2,
+                    description: "Perfectly grilled salmon fillets with roasted asparagus and lemon butter sauce.",
+                    link: "#"
+                },
+                {
+                    id: 6,
+                    title: "Berry Smoothie Bowl",
+                    category: "breakfast",
+                    image: "https://images.unsplash.com/photo-1551252268-2a2c81a9dd8e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8c21vb3RoaWUlMjBib3dsfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=600&q=60",
+                    time: "10 min",
+                    servings: 1,
+                    description: "A thick, creamy smoothie bowl topped with fresh berries, granola, and coconut.",
+                    link: "#"
+                }
+            ];
+            
+            // Display sample recipes on page load
+            displayRecipes(sampleRecipes);
+            
+            // Search functionality
+            searchBtn.addEventListener('click', function() {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                
+                if (searchTerm === '') {
+                    displayRecipes(sampleRecipes);
+                    return;
+                }
+                
+                const filteredRecipes = sampleRecipes.filter(recipe => 
+                    recipe.title.toLowerCase().includes(searchTerm) || 
+                    recipe.description.toLowerCase().includes(searchTerm)
+                );
+                
+                displayRecipes(filteredRecipes);
+            });
+            
+            // Filter functionality
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const filter = this.getAttribute('data-filter');
+                    
+                    if (filter === 'all') {
+                        displayRecipes(sampleRecipes);
+                    } else {
+                        const filteredRecipes = sampleRecipes.filter(recipe => 
+                            recipe.category === filter
+                        );
+                        
+                        displayRecipes(filteredRecipes);
+                    }
+                });
+            });
+            
+            // Function to display recipes
+            function displayRecipes(recipes) {
+                if (recipes.length === 0) {
+                    recipesContainer.innerHTML = `
+                        <div class="loading">
+                            <i class="fas fa-search"></i>
+                            <p>No recipes found. Try a different search term.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let recipesHTML = '';
+                
+                recipes.forEach(recipe => {
+                    recipesHTML += `
+                        <div class="recipe-card">
+                            <img src="${recipe.image}" alt="${recipe.title}" class="recipe-img">
+                            <div class="recipe-content">
+                                <h3 class="recipe-title">${recipe.title}</h3>
+                                <div class="recipe-info">
+                                    <span><i class="fas fa-clock"></i> ${recipe.time}</span>
+                                    <span><i class="fas fa-user"></i> ${recipe.servings} servings</span>
+                                </div>
+                                <p class="recipe-description">${recipe.description}</p>
+                                <a href="${recipe.link}" class="view-recipe">View Recipe</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                recipesContainer.innerHTML = recipesHTML;
+            }
+            
+            // Enter key to search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
